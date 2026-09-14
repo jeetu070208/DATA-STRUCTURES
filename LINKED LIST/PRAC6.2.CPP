@@ -1,177 +1,151 @@
-#include <iostream>
-#include <cstdlib> // Required for malloc() and free()
-using namespace std;
+#include <iostream>                     // Include input-output stream library
+using namespace std;                    // Avoid writing std:: prefix
 
-// Definition of the Node structure
-struct Node {
-    int data;          // Stores the data value of the node
-    Node* next;        // Pointer to the next node in the list
+// Define structure representing an individual node in the linked list
+struct Node
+{
+    int data;                           // Holds integer payload
+    Node *next;                         // Stores memory address of subsequent node
 };
 
-// Class representing the Singly Linked List focused on Deletion
-class SinglyLinkedList {
-private:
-    Node* head; // Points to the first node of the list
+Node *head = NULL;                      // Global head pointer pointing to the first node
 
-public:
-    // Constructor initializes an empty list
-    SinglyLinkedList() {
-        head = nullptr; // Set head pointer to null
+// Append a node at the tail of the list
+void insertEnd(int value)
+{
+    Node *newNode = new Node;           // Allocate memory on heap for new node
+    newNode->data = value;              // Store value into node
+    newNode->next = NULL;               // Tail node points to NULL
+
+    if (head == NULL)                   // Handle empty list condition
+    {
+        head = newNode;                 // List becomes just this single node
+    }
+    else
+    {
+        Node *temp = head;              // Traversal pointer starting at front
+
+        while (temp->next != NULL)      // Advance until reaching the existing tail node
+        {
+            temp = temp->next;          // Move to next node
+        }
+
+        temp->next = newNode;           // Connect old tail to new node
+    }
+}
+
+// Remove the front (head) node
+void deleteFirst()
+{
+    if (head == NULL)                   // Guard against underflow on empty list
+    {
+        cout << "List is empty." << endl; // Alert user
+        return;                         // Early return
     }
 
-    // Helper function to insert nodes using malloc (used to populate the list)
-    void append(int val) {
-        // Allocate heap memory for a new node
-        Node* newNode = (Node*)malloc(sizeof(Node));
-        if (newNode == nullptr) {
-            cout << "Memory allocation failed!" << endl;
-            exit(1);
-        }
-        newNode->data = val;     // Assign data
-        newNode->next = nullptr; // Initialize next pointer to null
+    Node *temp = head;                  // Save pointer to target node being deleted
+    head = head->next;                  // Advance head to the second node
+    delete temp;                        // Release heap memory of original head
+}
 
-        // If list is empty, make newNode the head
-        if (head == nullptr) {
-            head = newNode;
-            return;
-        }
-
-        // Traverse to find the last node
-        Node* temp = head;
-        while (temp->next != nullptr) {
-            temp = temp->next; // Advance to next node
-        }
-        temp->next = newNode;  // Link last node to new node
+// Remove the terminal (tail) node
+void deleteLast()
+{
+    if (head == NULL)                   // Guard against underflow on empty list
+    {
+        cout << "List is empty." << endl; // Alert user
+        return;                         // Early return
     }
 
-    // --- DELETION OPERATIONS ---
-
-    // 1. Delete node at the beginning
-    void deleteAtBeginning() {
-        // Underflow check: check if the list is already empty
-        if (head == nullptr) {
-            cout << "List is empty, nothing to delete." << endl;
-            return;
-        }
-
-        Node* temp = head;   // Temporarily store pointer to current head node
-        head = head->next;   // Shift head pointer to the second node
-        free(temp);          // Release memory of the deleted node using free()
+    if (head->next == NULL)             // Special case: list has only one element
+    {
+        delete head;                    // Free the single node
+        head = NULL;                    // Reset head to empty state
+        return;                         // Finished deletion
     }
 
-    // 2. Delete node at the end
-    void deleteAtEnd() {
-        // Underflow check: check if the list is empty
-        if (head == nullptr) {
-            cout << "List is empty, nothing to delete." << endl;
-            return;
-        }
+    Node *temp = head;                  // Traversal pointer to find second-to-last node
 
-        // Special case: list has only one node
-        if (head->next == nullptr) {
-            free(head);      // Free the single node's memory
-            head = nullptr;  // Reset head pointer to null
-            return;
-        }
-
-        // Traverse to the second-to-last node
-        Node* temp = head;
-        while (temp->next->next != nullptr) {
-            temp = temp->next; // Advance to next node
-        }
-
-        // Free memory of the last node
-        free(temp->next);     // Release dynamically allocated memory using free()
-        temp->next = nullptr; // Set second-to-last node's next pointer to null
+    while (temp->next->next != NULL)    // Stop when temp points right before the last node
+    {
+        temp = temp->next;              // Advance forward
     }
 
-    // 3. Delete a node by value (first occurrence)
-    void deleteByValue(int targetVal) {
-        // Underflow check: check if the list is empty
-        if (head == nullptr) {
-            cout << "List is empty, nothing to delete." << endl;
-            return;
-        }
+    delete temp->next;                  // Free heap memory of the last node
+    temp->next = NULL;                  // Sever the link by pointing second-to-last node to NULL
+}
 
-        // Special case: the target value is in the head node
-        if (head->data == targetVal) {
-            Node* temp = head; // Store pointer to head node
-            head = head->next; // Move head pointer forward
-            free(temp);        // Deallocate old head node
-            return;
-        }
+// Remove the node situated immediately after the node matching 'key'
+void deleteAfter(int key)
+{
+    Node *temp = head;                  // Traversal pointer starting at head
 
-        // Traverse to find the node right before the target node
-        Node* temp = head;
-        while (temp->next != nullptr && temp->next->data != targetVal) {
-            temp = temp->next; // Advance to next node
-        }
-
-        // Check if value was not found in the list
-        if (temp->next == nullptr) {
-            cout << "Value " << targetVal << " not found in the list." << endl;
-            return;
-        }
-
-        // Target found: bypass and deallocate the target node
-        Node* nodeToDelete = temp->next; // Hold address of node to be deleted
-        temp->next = nodeToDelete->next; // Link predecessor to successor node
-        free(nodeToDelete);              // Deallocate target node memory using free()
+    // Traverse until matching key is located or list ends
+    while (temp != NULL && temp->data != key)
+    {
+        temp = temp->next;              // Move forward
     }
 
-    // Display the list elements
-    void display() {
-        Node* temp = head; // Start from head
-        while (temp != nullptr) {
-            cout << temp->data << " -> "; // Print current node's data
-            temp = temp->next;            // Move to next node
-        }
-        cout << "NULL" << endl;           // Indicate end of list
+    if (temp == NULL)                   // Check if key does not exist in list
+    {
+        cout << "Given node not found." << endl; // Notify key was missing
+        return;                         // Exit function
     }
 
-    // Destructor to free any remaining nodes
-    ~SinglyLinkedList() {
-        Node* current = head;
-        while (current != nullptr) {
-            Node* nextNode = current->next; // Save pointer to next node
-            free(current);                  // Release current node memory
-            current = nextNode;             // Move forward
-        }
-        head = nullptr; // Ensure head is reset
+    if (temp->next == NULL)             // Check if target node is already the last node
+    {
+        cout << "No node exists after " << key << "." << endl; // Nothing to delete
+        return;                         // Exit function
     }
-};
 
-// Main function demonstrating deletion operations
-int main() {
-    SinglyLinkedList list;
+    Node *deleteNode = temp->next;      // Save reference to the node targeted for deletion
+    temp->next = deleteNode->next;      // Bypass the deleted node by rewiring pointers
+    delete deleteNode;                  // Deallocate memory of targeted node
+}
 
-    // Populate initial list: 10 -> 20 -> 30 -> 40 -> 50 -> NULL
-    list.append(10);
-    list.append(20);
-    list.append(30);
-    list.append(40);
-    list.append(50);
-    cout << "Initial list:" << endl;
-    list.display();
+// Output list contents sequentially
+void display()
+{
+    Node *temp = head;                  // Traversal pointer starting at head
 
-    // 1. Delete at beginning (removes 10)
-    list.deleteAtBeginning();
-    cout << "\nAfter deleteAtBeginning():" << endl;
-    list.display();
+    while (temp != NULL)                // Loop across all valid nodes
+    {
+        cout << temp->data << " -> ";   // Print payload with chaining arrow
+        temp = temp->next;              // Step forward
+    }
 
-    // 2. Delete at end (removes 50)
-    list.deleteAtEnd();
-    cout << "\nAfter deleteAtEnd():" << endl;
-    list.display();
+    cout << "NULL" << endl;             // Print NULL marker denoting list termination
+}
 
-    // 3. Delete by value (removes 30)
-    list.deleteByValue(30);
-    cout << "\nAfter deleteByValue(30):" << endl;
-    list.display();
+int main()
+{
+    // Populate list: 10 -> 20 -> 30 -> 40 -> 50 -> NULL
+    insertEnd(10);                      // Add 10 to end
+    insertEnd(20);                      // Add 20 to end
+    insertEnd(30);                      // Add 30 to end
+    insertEnd(40);                      // Add 40 to end
+    insertEnd(50);                      // Add 50 to end
 
-    // 4. Attempt to delete a nonexistent value
-    cout << "\nTrying to delete nonexistent value 99:" << endl;
-    list.deleteByValue(99);
+    cout << "Original Linked List:" << endl; // Section label
+    display();                          // Output: 10 -> 20 -> 30 -> 40 -> 50 -> NULL
 
-    return 0;
+    // Remove first element (10)
+    deleteFirst();                      // List becomes: 20 -> 30 -> 40 -> 50 -> NULL
+
+    cout << "\nAfter deleting first node:" << endl; // Section label
+    display();                          // Output: 20 -> 30 -> 40 -> 50 -> NULL
+
+    // Remove last element (50)
+    deleteLast();                       // List becomes: 20 -> 30 -> 40 -> NULL
+
+    cout << "\nAfter deleting last node:" << endl; // Section label
+    display();                          // Output: 20 -> 30 -> 40 -> NULL
+
+    // Target node after 20 (deletes 30)
+    deleteAfter(20);                    // List becomes: 20 -> 40 -> NULL
+
+    cout << "\nAfter deleting node after 20:" << endl; // Section label
+    display();                          // Output: 20 -> 40 -> NULL
+
+    return 0;                           // Exit program cleanly
 }
