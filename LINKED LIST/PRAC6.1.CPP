@@ -1,133 +1,109 @@
-#include <iostream>
-#include <cstdlib> // Required for malloc() and free()
-using namespace std;
+#include <iostream>             // Include standard input-output stream library
+using namespace std;            // Use standard namespace to avoid prefixing std::
 
-// Definition of the Node structure
-struct Node {
-    int data;          // Holds the integer value stored in the node
-    Node* next;        // Self-referential pointer to the next node
+// Define the blueprint for a singly linked list node
+struct Node
+{
+    int data;                   // Holds the integer value of the node
+    Node *next;                 // Pointer to store the address of the next node
 };
 
-// Helper function to allocate and initialize a new node using malloc
-Node* createNode(int val) {
-    // Allocate heap memory equal to the size of struct Node
-    Node* newNode = (Node*)malloc(sizeof(Node));
+Node *head = NULL;              // Global pointer tracking the start of the list (initially empty)
 
-    // Check if memory allocation was successful
-    if (newNode == nullptr) {
-        cout << "Memory allocation failed!" << endl;
-        exit(1); // Terminate if system is out of memory
-    }
+// Function to insert a new node at the very beginning of the list
+void insertBeginning(int value)
+{
+    Node *newNode = new Node;   // Allocate memory dynamically on the heap for a new node
 
-    newNode->data = val;     // Set data field
-    newNode->next = nullptr; // Initialize next pointer to null
-    return newNode;          // Return pointer to freshly allocated node
+    newNode->data = value;      // Assign the input data to the new node
+    newNode->next = head;       // Point the new node's next to the current head node
+    head = newNode;             // Update head to make the new node the first element
 }
 
-// Class representing the Singly Linked List
-class SinglyLinkedList {
-private:
-    Node* head; // Pointer to the first node
+// Function to insert a new node at the end of the list
+void insertEnd(int value)
+{
+    Node *newNode = new Node;   // Allocate heap memory for the new node
 
-public:
-    // Constructor initializes head to nullptr
-    SinglyLinkedList() {
-        head = nullptr; // List starts empty
+    newNode->data = value;      // Set the node's data
+    newNode->next = NULL;       // Since it will be the last node, set its next pointer to NULL
+
+    if (head == NULL)           // Check if the list is currently empty
+    {
+        head = newNode;         // If empty, the new node becomes the head
     }
+    else
+    {
+        Node *temp = head;      // Create a temporary pointer initialized to head for traversal
 
-    // 1. Insert a new node at the beginning
-    void insertAtBeginning(int val) {
-        Node* newNode = createNode(val); // Allocate node using malloc helper
-        newNode->next = head;            // Link new node to current head
-        head = newNode;                  // Move head pointer to new node
-    }
-
-    // 2. Insert a new node at the end
-    void insertAtEnd(int val) {
-        Node* newNode = createNode(val); // Allocate node using malloc helper
-
-        // Case 1: If list is empty, new node becomes the head
-        if (head == nullptr) {
-            head = newNode;
-            return;
+        while (temp->next != NULL) // Loop until reaching the last existing node
+        {
+            temp = temp->next;  // Move forward one node at a time
         }
 
-        // Case 2: Traverse to the last node
-        Node* temp = head;
-        while (temp->next != nullptr) {
-            temp = temp->next;           // Advance pointer
-        }
+        temp->next = newNode;   // Link the previous last node to the new node
+    }
+}
 
-        // Attach new node at the end
-        temp->next = newNode;
+// Function to insert a new node immediately after a node containing a target 'key'
+void insertAfter(int key, int value)
+{
+    Node *temp = head;          // Pointer to traverse and search through the list
+
+    // Search until list ends or target key is found
+    while (temp != NULL && temp->data != key)
+    {
+        temp = temp->next;      // Move to the next node in the list
     }
 
-    // 3. Insert a new node after a given node value
-    void insertAfter(int targetVal, int newVal) {
-        Node* temp = head; // Start search from the head
-
-        // Scan list until target value is found or end is reached
-        while (temp != nullptr && temp->data != targetVal) {
-            temp = temp->next;           // Move forward
-        }
-
-        // If target node does not exist in the list
-        if (temp == nullptr) {
-            cout << "Node with value " << targetVal << " not found." << endl;
-            return;
-        }
-
-        // Target found: allocate and link new node
-        Node* newNode = createNode(newVal); // Allocate node using malloc helper
-        newNode->next = temp->next;         // New node points to target's next
-        temp->next = newNode;               // Target node points to new node
+    if (temp == NULL)           // If temp reaches NULL, the target key does not exist
+    {
+        cout << "Given node not found." << endl; // Notify that the target was not found
+        return;                 // Exit the function early
     }
 
-    // Traversal and display
-    void display() {
-        Node* temp = head; // Start from head
-        while (temp != nullptr) {
-            cout << temp->data << " -> "; // Print data
-            temp = temp->next;            // Advance to next
-        }
-        cout << "NULL" << endl;           // End marker
+    Node *newNode = new Node;   // Allocate heap memory for the new node
+
+    newNode->data = value;      // Set the new node's value
+    newNode->next = temp->next; // Point new node to the node currently following temp
+    temp->next = newNode;       // Re-link temp to point to the new node
+}
+
+// Function to traverse and print all elements in the linked list
+void display()
+{
+    Node *temp = head;          // Temporary pointer initialized to head for non-destructive traversal
+
+    while (temp != NULL)        // Traverse every node until reaching the end (NULL)
+    {
+        cout << temp->data << " -> "; // Print the current node's data with an arrow
+        temp = temp->next;      // Advance pointer to the next node
     }
 
-    // Destructor to release all allocated memory using free()
-    ~SinglyLinkedList() {
-        Node* current = head;
-        while (current != nullptr) {
-            Node* nextNode = current->next; // Save pointer to next node
-            free(current);                  // Release current node memory
-            current = nextNode;             // Move to saved node
-        }
-        head = nullptr; // Reset head
-    }
-};
+    cout << "NULL" << endl;     // Print NULL to denote the end of the list followed by a newline
+}
 
-int main() {
-    SinglyLinkedList list;
+int main()
+{
+    // Insert 20, then 10 at the start (list becomes: 10 -> 20 -> NULL)
+    insertBeginning(20);        // Insert 20 at front
+    insertBeginning(10);        // Insert 10 at front
 
-    // Insert at beginning
-    list.insertAtBeginning(20);
-    list.insertAtBeginning(10);
-    cout << "After inserting 10 and 20 at beginning:" << endl;
-    list.display();
+    cout << "After insertion at beginning:" << endl; // Output label to console
+    display();                  // Print current list contents
 
-    // Insert at end
-    list.insertAtEnd(40);
-    list.insertAtEnd(50);
-    cout << "\nAfter inserting 40 and 50 at end:" << endl;
-    list.display();
+    // Append 30 and 40 to the end (list becomes: 10 -> 20 -> 30 -> 40 -> NULL)
+    insertEnd(30);              // Append 30 at end
+    insertEnd(40);              // Append 40 at end
 
-    // Insert after given node
-    list.insertAfter(20, 30);
-    cout << "\nAfter inserting 30 after node 20:" << endl;
-    list.display();
+    cout << "After insertion at end:" << endl; // Output label to console
+    display();                  // Print current list contents
 
-    // Insert after nonexistent node
-    cout << "\nTrying to insert 99 after nonexistent node 100:" << endl;
-    list.insertAfter(100, 99);
+    // Insert 25 directly after node 20 (list becomes: 10 -> 20 -> 25 -> 30 -> 40 -> NULL)
+    insertAfter(20, 25);        // Search for 20 and insert 25 right after it
 
-    return 0;
+    cout << "After inserting 25 after node 20:" << endl; // Output label to console
+    display();                  // Print current list contents
+
+    return 0;                   // Indicate successful program execution
 }
